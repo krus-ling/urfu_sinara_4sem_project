@@ -2,12 +2,16 @@ package ru.test.urfu_sinara_4sem_project.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.test.urfu_sinara_4sem_project.model.Task;
 import ru.test.urfu_sinara_4sem_project.service.TaskService;
+
+import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/tasks")
@@ -18,9 +22,14 @@ public class TaskController {
 
     @GetMapping
     public String listTasks(Model model) {
-        model.addAttribute("tasks", taskService.findAll());
+        var tasks = taskService.findAll();
+        model.addAttribute("tasks", tasks);
+        model.addAttribute("totalTasks", tasks.size());
+        long completedTasks = tasks.stream().filter(Task::isCompleted).count();
+        model.addAttribute("completedTasks", completedTasks);
         return "tasks/list";
     }
+
 
     @GetMapping("/new")
     public String newTaskForm(Model model) {
@@ -58,5 +67,22 @@ public class TaskController {
     public String deleteTask(@PathVariable Long id) {
         taskService.deleteById(id);
         return "redirect:/tasks";
+    }
+
+    @PostMapping("/{id}/completed")
+    @ResponseBody
+    public ResponseEntity<?> updateCompleted(@PathVariable Long id, @RequestBody Map<String, Boolean> payload) {
+        Optional<Task> optionalTask = taskService.findById(id);
+        if (optionalTask.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Task task = optionalTask.get();
+        Boolean completed = payload.get("completed");
+        if (completed == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Missing 'completed' field"));
+        }
+        task.setCompleted(completed);
+        taskService.save(task);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 }
