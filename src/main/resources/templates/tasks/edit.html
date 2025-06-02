@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Редактировать задачу</title>
+</head>
+<body>
+<h1>Редактировать задачу</h1>
+
+<form th:action="@{/tasks/{id}(id=${task.id})}" th:object="${task}" method="post">
+  <div>
+    <label>Заголовок:</label>
+    <input type="text" th:field="*{title}"/>
+    <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+  </div>
+
+  <div>
+    <label>Описание:</label>
+    <textarea th:field="*{description}"></textarea>
+    <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+  </div>
+
+  <div>
+    <label>Выполнено:</label>
+    <input type="checkbox" th:field="*{completed}"/>
+  </div>
+
+  <button type="submit">Обновить</button>
+</form>
+
+<a href="/tasks">Назад к списку</a>
+</body>
+</html>
